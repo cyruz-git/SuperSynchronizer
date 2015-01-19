@@ -23,6 +23,7 @@ The script can be instantiated multiple times, and the GUI will stack automatica
 Name | Description
 -----|------------
 COPYING | GNU General Public License.
+COPYING.LESSER | GNU Lesser General Public License.
 README.md | This document.
 SuperSynchronizer.ahk | Main and only script file.
 
@@ -51,7 +52,7 @@ EX_REVERSE_EXTS | Reverse check extensions exclusions. The files with this exten
 
 ### License
 
-*SuperSynchronizer* is released under the terms of the [GNU General Public License](http://www.gnu.org/licenses/).
+*SuperSynchronizer* is released under the terms of the [GNU Lesser General Public License](http://www.gnu.org/licenses/).
 
 ### Contact
 
