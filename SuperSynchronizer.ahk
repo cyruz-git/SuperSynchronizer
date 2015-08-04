@@ -76,6 +76,10 @@ INTERACTIVE := 1
 ; [ 1: ENABLED, 0: DISABLED ]
 LOW_PRIORITY := 0
 
+; HOW LONG TO SLEEP BETWEEN EACH FILE ITERATION
+; [ INTEGER, MILLISECONDS ]
+SLEEP_MS := 10
+
 ; REPLICATION CHECK GLOBAL EXCLUSIONS - ITEMS NOT TO BE COPIED ON DESTINATION SIDE
 ; [ CONTINUATION SECTION, NEWLINE SEPARATED, NO QUOTES, ENCLOSED BY <>, FULL PATH OR NAME ]
 ; Excluded directories.
@@ -119,7 +123,7 @@ If ( INTERACTIVE )
 }
 
 ; Source folder check.
-If ( !InStr(FileExist(SOURCE_DIR), "D") )
+If ( !InStr( FileExist( SOURCE_DIR ), "D" ) )
 {
     If ( INTERACTIVE )
         MsgBox,, SuperSynchronizer, Source folder doesn't exists!
@@ -127,14 +131,14 @@ If ( !InStr(FileExist(SOURCE_DIR), "D") )
 }
 
 ; Destination folder check.
-If ( !InStr(FileExist(DESTIN_DIR), "D") )
+If ( !InStr( FileExist( DESTIN_DIR ), "D" ) )
 {
 	If ( SIMULATION )
 	{
-			MsgBox,, SuperSynchronizer, Cannot simulate if destination directory is not existing.
-			ExitApp
+        MsgBox,, SuperSynchronizer, Cannot simulate if destination directory is not existing.
+        ExitApp
 	}
-    If (INTERACTIVE)
+    If ( INTERACTIVE )
 	{
         Msgbox, 0x4, SuperSynchronizer, Destination folder doesn't exists, create it?
         IfMsgBox, No
@@ -145,17 +149,18 @@ If ( !InStr(FileExist(DESTIN_DIR), "D") )
 }
 
 ; If SIMULATION == 1, force the LOGGING to 1.
-(SIMULATION) ? LOG_ENABLE := 1
+If ( SIMULATION )
+    LOG_ENABLE := 1
 
 ; Modify the OnExit so that the "Stop" feature is correctly handled.
 OnExit, STOPSYNC
 
 ; Adjust the priority of the current process.
-nPid := DllCall("GetCurrentProcessId")
-Process, Priority, %nPid%, % (LOW_PRIORITY) ? "L" : "N"
+nPid := DllCall( "GetCurrentProcessId" )
+Process, Priority, %nPid%, % ( LOW_PRIORITY ) ? "L" : "N"
 
 ; Create the callback for the stop feature.
-COPY_CALLBACK := RegisterCallback("CopyCallback", "Fast")
+COPY_CALLBACK := RegisterCallback( "CopyCallback", "Fast" )
 
 ; Set STOP_SYNC = 0 to start the copy operation (flag "Sure?" and press "Stop" to turn STOP_SYNC = 1).
 STOP_SYNC := 0
@@ -165,7 +170,7 @@ If ( INTERACTIVE )
     SysGet, Mon, Monitor
     _X := MonRight - 388
     WinGet, hWndList, LIST, SuperSynchronizer ahk_class AutoHotkeyGUI
-    _Y := (75 * hWndList) + 1
+    _Y := ( 75 * hWndList ) + 1
 
     ; Gui management.
     Gui, +LastFound +Hwndh_GUI
@@ -185,10 +190,10 @@ START_TIMESTAMP = %A_Now%
 ; !!! REPLICATION CHECK START !!!
 ; ----------------------------------------------------------------------------------------------------------------------
 If ( LOG_ENABLE ) ; Log management.
-    WriteLog(1, "REPLICATION CHECK STARTED`n****************************************************************`n")
+    WriteLog( 1, "REPLICATION CHECK STARTED`n****************************************************************`n" )
 
 SetWorkingDir, %SOURCE_DIR%
-bSyncStopped := ReplicationCheck("*.*")
+bSyncStopped := ReplicationCheck( "*.*" )
 ; ----------------------------------------------------------------------------------------------------------------------
 
 ; !!! REVERSE CHECK START !!!
@@ -199,26 +204,26 @@ If ( MIRRORING && !bSyncStopped )
         GuiControl,, SyncText, Mirroring...`n`nFROM:`t%SOURCE_DIR%`nTO:`t%DESTIN_DIR%
 
 	If ( LOG_ENABLE ) ; Log management.
-        WriteLog(0, "`n")
-      , WriteLog(1, "REVERSE CHECK STARTED`n****************************************************************`n")
+        WriteLog( 0, "`n" )
+      , WriteLog( 1, "REVERSE CHECK STARTED`n****************************************************************`n" )
 	
 	SetWorkingDir, %DESTIN_DIR%
-	bSyncStopped := ReverseCheck("*.*")
+	bSyncStopped := ReverseCheck( "*.*" )
 }
 ; ----------------------------------------------------------------------------------------------------------------------
 
 ; Get end timestamp and calculate elapsed time.
 END_TIMESTAMP = %A_Now%
 EnvSub, END_TIMESTAMP, START_TIMESTAMP, Seconds
-VarSetCapacity(TIME_ELAPSED, 18) ; XX:XX:XX + string terminator = 9 chars (UNICODE: 9*2 bytes).
+VarSetCapacity( TIME_ELAPSED, 18 ) ; XX:XX:XX + string terminator = 9 chars (UNICODE: 9*2 bytes).
 DllCall( "msvcrt\swprintf", Str,TIME_ELAPSED, Str,"%02d:%02d:%02d", Int,Floor(END_TIMESTAMP/3600)
                          , Int,Mod(END_TIMESTAMP/60,60), Int,Mod(END_TIMESTAMP,60) )
 
 If ( INTERACTIVE )
 {   ; Gui management.
     Gui, Cancel
-    GuiControl,, SyncText, % ((bSyncStopped) ? "Synchronization Stopped!" 
-											 : "Done!") "`n`nTime Elapsed: " TIME_ELAPSED
+    GuiControl,, SyncText, % ( ( bSyncStopped ) ? "Synchronization Stopped!" : "Done!" )
+                           . "`n`nTime Elapsed: " TIME_ELAPSED
     GuiControl, Hide, AreYouSure
     GuiControl,, SyncButton, &Ok
     GuiControl, +Default -g gGUIDESTROY, SyncButton
@@ -229,16 +234,16 @@ If ( INTERACTIVE )
 If ( LOG_ENABLE )
 {	; Log management - append log to the file.
     If ( !LOG_FILE )
-        LOG_FILE := A_ScriptDir "\" SubStr(A_ScriptName, 1, -3) "log"
+        LOG_FILE := A_ScriptDir "\" SubStr( A_ScriptName, 1, -3 ) "log"
     SplitPath, LOG_FILE,, sFilePath, sFileExt, sFileName
     Loop
     {   ; If file exists loop until it finds a not existing filename.
-        If ( FileExist(LOG_FILE) )
+        If ( FileExist( LOG_FILE ) )
             LOG_FILE = %sFilePath%\%sFileName%_%A_Index%.%sFileExt%
         Else Break
 	}
-	WriteLog(0, "`n****************************************************************`n")
-    WriteLog(1, "SINCHRONIZATION FINISHED IN " TIME_ELAPSED, LOG_FILE)
+	WriteLog( 0, "`n****************************************************************`n" )
+    WriteLog( 1, "SINCHRONIZATION FINISHED IN " TIME_ELAPSED, LOG_FILE )
 }
 
 ; Restore correct OnExit behaviour and exit from the script.
@@ -253,18 +258,14 @@ ExitApp
  GUICLOSE:
 	Critical
 	If ( !INTERACTIVE )
-	{	; Stop synchronization if the script is not interactive.
-		STOP_SYNC := 1
-		Return
-	}
+        ; Stop synchronization if the script is not interactive.
+		Return, STOP_SYNC := 1
 	If ( A_GuiControl == "SyncButton" )
-	{   ; "Stop" button pressed, check the "AreYouSure" flag before stopping sync.
+	    ; "Stop" button pressed, check the "AreYouSure" flag before stopping sync.
 		GuiControlGet, STOP_SYNC,, AreYouSure
-	}
 	Else
-	{   ; Script or GUI closed, stop synchronization.
+	    ; Script or GUI closed, stop synchronization.
 		STOP_SYNC := 1
-	}
 	Return
 ;GUICLOSE
 ;STOPSYNC
@@ -282,7 +283,8 @@ ExitApp
 ; ===[ FUNCTIONS SECTION ]==============================================================================================
 ; ======================================================================================================================
 
-ReplicationCheck(sPattern) {
+ReplicationCheck( sPattern )
+{
 	Global SOURCE_DIR, DESTIN_DIR, EX_REPLICATION_DIRS, EX_REPLICATION_FILES, SIMULATION, LOG_ENABLE, COPY_CALLBACK
 	     , STOP_SYNC
 
@@ -292,12 +294,12 @@ ReplicationCheck(sPattern) {
 		If ( STOP_SYNC )
             Return 1
 		
-		If ( InStr(FileExist(A_LoopFileFullPath), "D") )
+		If ( InStr( FileExist( A_LoopFileFullPath ), "D" ) )
 		{	; It's a directory.
-			If ( !InStr(EX_REPLICATION_DIRS, "<" A_LoopFileLongPath ">") )
-			&& ( !InStr(EX_REPLICATION_DIRS, "<" A_LoopFileName     ">") )
+			If ( !InStr( EX_REPLICATION_DIRS, "<" A_LoopFileLongPath ">" ) )
+			&& ( !InStr( EX_REPLICATION_DIRS, "<" A_LoopFileName     ">" ) )
 			{	; If directory isn't in exlusion list.
-				If ( !InStr(FileExist(DESTIN_DIR "\" A_LoopFileFullPath), "D") )
+				If ( !InStr( FileExist( DESTIN_DIR "\" A_LoopFileFullPath), "D" ) )
 				{	; If source directory doesn't exists on destination, create it.
 					If ( !SIMULATION )
 					{   ; If SIMULATION is disabled.
@@ -307,12 +309,12 @@ ReplicationCheck(sPattern) {
 						FileCreateDir, %DESTIN_DIR%\%A_LoopFileFullPath%
 					}
                     If ( LOG_ENABLE ) ; Log management
-                        WriteLog( 1, (!SIMULATION && ErrorLevel)
+                        WriteLog( 1, ( !SIMULATION && ErrorLevel )
 						        ? "ERROR >> Could not create directory: <" DESTIN_DIR "\" A_LoopFileFullPath "> $`n"
 								: "SUCCESS >> Directory created: <" DESTIN_DIR "\" A_LoopFileFullPath "> $`n" )
 				}
 				; Recursion into current directory.
-				bStopFlag := ReplicationCheck(A_LoopFileFullPath "\*.*")
+				bStopFlag := ReplicationCheck( A_LoopFileFullPath "\*.*" )
 				; If bStopFlag is set, return 1 (it means that STOP_SYNC == 1).
 				If ( bStopFlag )
                     Return 1
@@ -320,17 +322,17 @@ ReplicationCheck(sPattern) {
 			Else
 			{   ; Directory skipped.
                 If ( LOG_ENABLE ) ; Log management.
-                    WriteLog(1, "SKIPPED >> Directory excluded: <" A_LoopFileLongPath "> $`n")
+                    WriteLog( 1, "SKIPPED >> Directory excluded: <" A_LoopFileLongPath "> $`n" )
 			}
 		}
 		Else
 		{   ; It's a file.
 			bCopyFlag := 0
-			If ( !InStr(EX_REPLICATION_FILES, "<" A_LoopFileLongPath ">") )
-			&& ( !InStr(EX_REPLICATION_FILES, "<" A_LoopFileName     ">") )
-			&& ( !InStr(EX_REPLICATION_EXTS,  "<" A_LoopFileExt      ">") )
+			If ( !InStr( EX_REPLICATION_FILES, "<" A_LoopFileLongPath ">" ) )
+			&& ( !InStr( EX_REPLICATION_FILES, "<" A_LoopFileName     ">" ) )
+			&& ( !InStr( EX_REPLICATION_EXTS,  "<" A_LoopFileExt      ">" ) )
             {   ; If file isn't in exlusion lists.
-				If ( !sFileAttr := FileExist(DESTIN_DIR "\" A_LoopFileFullPath) || InStr(sFileAttr, "D") )
+				If ( !sFileAttr := FileExist( DESTIN_DIR "\" A_LoopFileFullPath ) || InStr( sFileAttr, "D" ) )
 				{   ; If it doesn't exists on destination or it exists and is a directory on destination, set copy flag.
 					If ( !SIMULATION )
 					{   ; If SIMULATION is disabled.
@@ -361,7 +363,7 @@ ReplicationCheck(sPattern) {
 			Else
 			{   ; File skipped.
                 If ( LOG_ENABLE ) ; Log management.
-                    WriteLog(1, "SKIPPED >> File excluded: <" A_LoopFileLongPath "> $`n")
+                    WriteLog( 1, "SKIPPED >> File excluded: <" A_LoopFileLongPath "> $`n" )
 			}
 			If ( bCopyFlag )
 			{   ; File copy.
@@ -373,22 +375,24 @@ ReplicationCheck(sPattern) {
 					If ( !nReturn && A_LastError == 1235 )
 					{   ; If CopyFileEx failed and GetLastError == ERROR_REQUEST_ABORTED == 1235.
 						If ( LOG_ENABLE ) ; Log management.
-							WriteLog(1, "STOPPED >> Copy stopped: <" A_LoopFileLongPath "> not copied $`n" )
+							WriteLog( 1, "STOPPED >> Copy stopped: <" A_LoopFileLongPath "> not copied $`n" )
 						; Return 1 (it means that STOP_SYNC == 1).
 						Return 1
 					}
 				}
 				If ( LOG_ENABLE ) ; Log management.
-                    WriteLog( 1, (!SIMULATION && !nReturn) 
+                    WriteLog( 1, ( !SIMULATION && !nReturn ) 
 					        ? "ERROR >> Error copying <" A_LoopFileLongPath "> to <" sDestFileLongPath "> $`n"
 							: "SUCCESS >> Copied <" A_LoopFileLongPath "> to <" sDestFileLongPath "> $`n" )
 			}
 		}
+		Sleep, %SLEEP_MS%
 	}
     Return 0
 }
 
-ReverseCheck(sPattern) {
+ReverseCheck( sPattern )
+{
 	Global SOURCE_DIR, DESTIN_DIR, EX_REVERSE_DIRS, EX_REVERSE_FILES, SIMULATION, LOG_ENABLE, COPY_CALLBACK, STOP_SYNC
 
     bDontDeleteDirFlag := 0
@@ -398,41 +402,41 @@ ReverseCheck(sPattern) {
         If ( STOP_SYNC )
             Return 1
 	
-		If ( InStr(FileExist(A_LoopFileFullPath), "D") )
+		If ( InStr( FileExist( A_LoopFileFullPath ), "D" ) )
 		{   ; It's a directory.
-            If ( !FileExist(SOURCE_DIR "\" A_LoopFileFullPath) )
+            If ( !FileExist( SOURCE_DIR "\" A_LoopFileFullPath ) )
 			{   ; If directory doesn't exist on source side.
-				If ( !InStr(EX_REVERSE_DIRS, "<" A_LoopFileLongPath ">") )
-				&& ( !InStr(EX_REVERSE_DIRS, "<" A_LoopFileName     ">") )
+				If ( !InStr( EX_REVERSE_DIRS, "<" A_LoopFileLongPath ">" ) )
+				&& ( !InStr( EX_REVERSE_DIRS, "<" A_LoopFileName     ">" ) )
 				{   ; If directory isn't in exlusion lists.
 					; Recurse into the directory.
-                    ReverseCheck(A_LoopFileFullPath "\*.*")
-					If ( !FileExist(A_LoopFileFullPath "\*") )
+                    ReverseCheck( A_LoopFileFullPath "\*.*" )
+					If ( !FileExist( A_LoopFileFullPath "\*" ) )
 					{	; Remove directory only if empty.
 						If ( !SIMULATION )
 						{   ; If SIMULATION is disabled.
 							FileRemoveDir,  %A_LoopFileFullPath%
 						}
 						If ( LOG_ENABLE ) ; Log management.
-							WriteLog( 1, (!SIMULATION && ErrorLevel)
+							WriteLog( 1, ( !SIMULATION && ErrorLevel )
 							        ? "ERROR >> Could not remove <" A_LoopFileLongPath "> $`n"
 							        : "SUCCESS >> Directory removed: <" A_LoopFileLongPath "> $`n" )
 					}
 					Else
 					{	; Directory excluded because not empty.
 						If ( LOG_ENABLE ) ; Log management.
-							WriteLog(1, "SKIPPED >> Directory excluded because not empty: <" A_LoopFileLongPath "> $`n")
+							WriteLog( 1, "SKIPPED >> Directory excluded, not empty: <" A_LoopFileLongPath "> $`n" )
 					}
 				}
 				Else
 				{   ; Directory skipped.
 					If ( LOG_ENABLE ) ; Log management.
-                        WriteLog(1, "SKIPPED >> Directory excluded: <" A_LoopFileLongPath "> $`n")
+                        WriteLog( 1, "SKIPPED >> Directory excluded: <" A_LoopFileLongPath "> $`n" )
 				}
 			}
 			Else
 			{   ; Else directory exists in source side.
-				bStopFlag := ReverseCheck(A_LoopFileFullPath "\*.*")
+				bStopFlag := ReverseCheck( A_LoopFileFullPath "\*.*" )
 				; If bStopFlag is set, return 1 (it means that STOP_SYNC == 1).
 				If ( bStopFlag )
                     Return 1
@@ -440,31 +444,31 @@ ReverseCheck(sPattern) {
 		}
 		Else
 		{   ; It's a file.
-            If ( !FileExist(SOURCE_DIR "\" A_LoopFileFullPath) )
+            If ( !FileExist( SOURCE_DIR "\" A_LoopFileFullPath ) )
 			{   ; If file doesn't exists on source side.
-				If ( !InStr(EX_REVERSE_FILES, "<" A_LoopFileLongPath ">") )
-				&& ( !InStr(EX_REVERSE_FILES, "<" A_LoopFileName     ">") )
-				&& ( !InStr(EX_REVERSE_EXTS,  "<" A_LoopFileExt      ">") )
+				If ( !InStr( EX_REVERSE_FILES, "<" A_LoopFileLongPath ">" ) )
+				&& ( !InStr( EX_REVERSE_FILES, "<" A_LoopFileName     ">" ) )
+				&& ( !InStr( EX_REVERSE_EXTS,  "<" A_LoopFileExt      ">" ) )
 				{   ; If file isn't in exclusion lists.
 					If ( !SIMULATION )
 					{   ; If SIMULATION is disabled.
 						FileDelete, %A_LoopFileFullPath%
 					}
 					If ( LOG_ENABLE ) ; Log management.
-                        WriteLog( 1, (!SIMULATION && ErrorLevel)
+                        WriteLog( 1, ( !SIMULATION && ErrorLevel )
 						        ? "ERROR >> Could not delete <" A_LoopFileLongPath "> $`n"
                                 : "SUCCESS >> File deleted: <" A_LoopFileLongPath "> $`n" )
 				}
 				Else
 				{   ; File skipped
 					If ( LOG_ENABLE ) ; Log management.
-                        WriteLog(1, "SKIPPED >> File excluded: <" A_LoopFileLongPath "> $`n")
+                        WriteLog( 1, "SKIPPED >> File excluded: <" A_LoopFileLongPath "> $`n" )
 				}
 			}
 			Else
 			{   ; Else file exists on source side.
-				If ( !InStr(EX_REVERSE_FILES, "<" A_LoopFileLongPath ">") )
-				&& ( !InStr(EX_REVERSE_FILES, "<" A_LoopFileName ">") )
+				If ( !InStr( EX_REVERSE_FILES, "<" A_LoopFileLongPath ">" ) )
+				&& ( !InStr( EX_REVERSE_FILES, "<" A_LoopFileName     ">" ) )
 				{   ; If file isn't in exclusion lists.
 					FileGetTime, sFileTime, %SOURCE_DIR%\%A_LoopFileFullPath%
 					EnvSub, sFileTime, %A_LoopFileTimeModified%, seconds
@@ -481,13 +485,13 @@ ReverseCheck(sPattern) {
 							If ( !nReturn && A_LastError == 1235 )
 							{   ; If CopyFileEx failed and GetLastError == ERROR_REQUEST_ABORTED == 1235.
 								If ( LOG_ENABLE ) ; Log management.
-									WriteLog(1, "STOPPED >> Copy stopped: <" A_LoopFileLongPath "> not copied $`n" )
+									WriteLog( 1, "STOPPED >> Copy stopped: <" A_LoopFileLongPath "> not copied $`n" )
 								; Return 1 (it means that STOP_SYNC == 1).
 								Return 1
 							}
 						}
                         If ( LOG_ENABLE ) ; Log management.
-                            WriteLog( 1, (!SIMULATION && !nReturn) 
+                            WriteLog( 1, ( !SIMULATION && !nReturn ) 
 							? "ERROR >> Error copying <" sSourceFileLongPath "> to <" A_LoopFileLongPath "> $`n"
 							: "SUCCESS >> Copied <" sSourceFileLongPath "> to <" A_LoopFileLongPath "> $`n" )
 					}
@@ -495,15 +499,17 @@ ReverseCheck(sPattern) {
 				Else
 				{   ; File skipped.
 					If ( LOG_ENABLE ) ; Log management.
-                        WriteLog(1, "SKIPPED >> File excluded: <" A_LoopFileLongPath "> $`n")
+                        WriteLog( 1, "SKIPPED >> File excluded: <" A_LoopFileLongPath "> $`n" )
 				}
 			}
 		}
+		Sleep, %SLEEP_MS%
 	}
 	Return 0
 }
 
-WriteLog(bAppendTime, sLogEntry, sAppendLogTo:="") {
+WriteLog( bAppendTime, sLogEntry, sAppendLogTo:="" )
+{
     Static sLogData
     If ( bAppendTime )
         sLogData .= "[" A_YYYY "." A_MM "." A_DD "]" A_Hour ":" A_Min ":" A_Sec " - " sLogEntry
@@ -513,7 +519,8 @@ WriteLog(bAppendTime, sLogEntry, sAppendLogTo:="") {
         FileAppend, %sLogData%, %sAppendLogTo%
 }
 
-CopyCallback(var1lo, var1hi, var2lo, var2hi, var3lo, var3hi, var4lo, var4hi, var5, var6, var7, var8, var9) {
+CopyCallback( var1lo, var1hi, var2lo, var2hi, var3lo, var3hi, var4lo, var4hi, var5, var6, var7, var8, var9 )
+{
 	; 13 dummy parameters to conform to the CopyProgressRoutine
     ; http://msdn.microsoft.com/en-us/library/windows/desktop/aa363854%28v=vs.85%29.aspx
 	Global STOP_SYNC

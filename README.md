@@ -43,6 +43,7 @@ LOG_ENABLE | Enable logging, storing all operations history on file (1 to enable
 LOG_FILE | Log file path (absolute path, without quotes). Default to *Scriptname*.**log** in the script directory. Will be created with a numerical suffix if other log files with the same name are present. | `C:\LogDir\MySync.log`
 INTERACTIVE | Enable the interactive mode showing a GUI in the TOP-RIGHT corner that allows to stop the script (1 to enable, 0 to disable). | `1` or `0`
 LOW_PRIORITY | Enable the low priority mode for the script process (1 to enable, 0 to disable). | `1` or `0`
+SLEEP_MS | How many milliseconds the script sleeps between each iteration. | `10`
 EX_REPLICATION_DIRS | Replication check directories exclusions. These directories will not be copied on destination (newline separated, without quotes, enclosed by <>, either the full path or a generic directory name). | `<C:\Some\Dir>`<br>`<GenericDirName>`<br>`<AnotherDir>`
 EX_REPLICATION_FILES | Replication check files exclusions. These files will not be copied on destination (newline separated, without quotes, enclosed by <>, either the full path or a generic file name). | `<C:\Path\To\A\File>`<br>`<GenericFileName.ext>`<br>`<AnotherFile.ext>`
 EX_REPLICATION_EXTS | Replication check extensions exclusions. The files with this extensions will not be copied on destination (newline separated, without quotes, enclosed by <>). | `<txt>`<br>`<log>`
