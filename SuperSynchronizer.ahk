@@ -371,7 +371,8 @@ ReplicationCheck( sPattern )
                 sDestFileLongPath = %DESTIN_DIR%\%A_LoopFileFullPath%
                 If ( !SIMULATION )
                 {   ; If SIMULATION is disabled.
-                    nReturn := DllCall( "CopyFileEx", Str,"\\?\" A_LoopFileLongPath, Str,"\\?\" sDestFileLongPath
+                    nReturn := DllCall( "CopyFileEx", Str,PrependLongPathPrefix(A_LoopFileLongPath)
+                                                    , Str,PrependLongPathPrefix(sDestFileLongPath)
                                                     , UInt,COPY_CALLBACK, UInt,0, UInt,0, UInt,0 )
                     If ( !nReturn && A_LastError == 1235 )
                     {   ; If CopyFileEx failed and GetLastError == ERROR_REQUEST_ABORTED == 1235.
@@ -480,9 +481,10 @@ ReverseCheck( sPattern )
                         {   ; If SIMULATION is disabled.
                             ; Remove attributes to destination file, because CopyFileEx fails if readonly or hidden.
                             FileSetAttrib, -RH, %A_LoopFileLongPath%
-                            nReturn := DllCall( "CopyFileEx", Str,"\\?\" sSourceFileLongPath
-                                              , Str,"\\?\" A_LoopFileLongPath, UInt,COPY_CALLBACK, UInt,0, UInt,0
-                                              , UInt,0 )
+                            nReturn := DllCall( "CopyFileEx", Str,PrependLongPathPrefix(sSourceFileLongPath)
+                                                            , Str,PrependLongPathPrefix(A_LoopFileLongPath)
+                                                            , UInt,COPY_CALLBACK, UInt,0, UInt,0
+                                                            , UInt,0 )
                             If ( !nReturn && A_LastError == 1235 )
                             {   ; If CopyFileEx failed and GetLastError == ERROR_REQUEST_ABORTED == 1235.
                                 If ( LOG_ENABLE ) ; Log management.
@@ -526,4 +528,12 @@ CopyCallback( var1lo, var1hi, var2lo, var2hi, var3lo, var3hi, var4lo, var4hi, va
     ; http://msdn.microsoft.com/en-us/library/windows/desktop/aa363854%28v=vs.85%29.aspx
     Global STOP_SYNC
     Return STOP_SYNC
+}
+
+PrependLongPathPrefix( sPath )
+{
+    if (SubStr(sPath,1,2) = "\\") ; Remote path
+        return "\\?\UNC" SubStr(sPath,2)
+    else
+        return "\\?\" sPath
 }
